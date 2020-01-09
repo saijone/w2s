@@ -1,0 +1,72 @@
+box: golang
+
+dev:
+  steps:
+    - internal/watch:
+        code: |
+          go build ./...
+          ./source
+        reload: true
+
+build:
+  steps:
+    - wercker/golint
+
+    - script:
+        name: go build
+        code: |
+          CGO_ENABLED=0 go build -a -ldflags '-s' -installsuffix cgo -o $WERCKER_OUTPUT_DIR/w2s-ex . 
+          cp $WERCKER_OUTPUT_DIR/w2s-ex $WERCKER_REPORT_ARTIFACTS_DIR
+
+  after-steps:
+    # for dev only, create a local image with --docker-local option, wercker build --docker-local
+    # 1. It needs to run build and docker push in the same pipeline
+    # so that docker image can see the files in $WERCKER_OUTPUT_DIR
+    # 2. --docker-local creates and tags docker image locally, it doesn't need registry info.
+    - internal/docker-scratch-push:
+        repository: wcr.io/wercker/w2s
+        tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
+        registry: https://wcr.io/v2
+        username: $WCR_USERNAME
+        password: $WCR_PASSWORD
+        cmd: ./w2s-ex
+
+test-w2s:
+    steps:
+        - script:
+            name: test 1
+            code: pwd
+        - script:
+            name: test 2
+            code: ./w2s-ex &
+        - script:
+            name: test 3
+            code: curl http://localhost:5005/cities.json
+                    
+push-wcr:
+  box:
+    id: alpine
+    cmd: /bin/sh
+
+  steps:
+    - internal/docker-scratch-push:
+        repository: wcr.io/wercker/w2s
+        tag: $WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
+        registry: https://wcr.io/v2
+        username: $WCR_USERNAME
+        password: $WCR_PASSWORD
+        cmd: ./w2s-ex
+
+push-ocir:
+  box:
+    id: alpine
+    cmd: /bin/sh
+
+  steps:
+    - internal/docker-scratch-push:
+        repository: iad.ocir.io/odx-pipelines/spinnaker/w2s
+        tag: latest,$WERCKER_GIT_BRANCH-$WERCKER_GIT_COMMIT
+        registry: https://iad.ocir.io/v2
+        username: $OCIR_USERNAME
+        password: $OCIR_PASSWORD
+        cmd: ./w2s-ex
