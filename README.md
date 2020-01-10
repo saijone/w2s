@@ -1,3 +1,3 @@
 # Wercker triggers Spinnaker
 
-test 5
+test d1
