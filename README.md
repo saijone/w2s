@@ -1,3 +1,3 @@
 # Wercker triggers Spinnaker
 
-test trigger disableFreeTier
+test push disableFreeTier=false
