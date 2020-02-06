@@ -1,3 +1,3 @@
 # Wercker triggers Spinnaker
 
-test push ~1
+fix webhook ~1
