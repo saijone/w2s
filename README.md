@@ -1,3 +1,3 @@
 # Wercker triggers Spinnaker
 
-fix webhook ~2
+fix webhook ~3
